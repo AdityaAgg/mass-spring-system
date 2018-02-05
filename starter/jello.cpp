@@ -222,7 +222,7 @@ void doIdle()
     // insert code which appropriately performs one step of the cube simulation:
   }
 
-  
+  //
 
   
   glutPostRedisplay();
