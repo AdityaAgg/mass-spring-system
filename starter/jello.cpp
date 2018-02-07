@@ -217,12 +217,12 @@ void doIdle()
 
   if (pause == 0)
   {
-    RK4(&jello);
+    Euler(&jello);
     
     // insert code which appropriately performs one step of the cube simulation:
   }
 
-  //test
+  
 
   
   glutPostRedisplay();
