@@ -83,6 +83,10 @@ x = (y1) * (z2) - (y2) * (z1);\
 y = (x2) * (z1) - (x1) * (z2);\
 z = (x1) * (y2) - (x2) * (y1)
 
+
+#define DOTPRODUCT(vector1, vector2, res)\
+res = ((vector1).x * (vector2).x) + ((vector1).y * (vector2).y) + ((vector1).z * (vector2).z);
+
 // normalizes vector dest
 // struct point dest
 // result returned in dest

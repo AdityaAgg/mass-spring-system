@@ -14,7 +14,7 @@ void computeAcceleration(struct world * jello, struct point a[8][8][8]);
 // updates the jello structure accordingly
 void Euler(struct world * jello);
 void RK4(struct world * jello);
-struct point calculateHookesLaw(struct point a, struct point b, double restLength, double elasticConstant);
+struct point calculateHookesLaw(struct point a, struct point b, struct point vA, struct point vB, double restLength, double elasticConstant, double dampingConstant);
 void calculateStructuralForces(struct world * jello, struct point  a[8][8][8]);
 void calculateShearForces(struct world * jello, struct point a[8][8][8]);
 void calculateBendForces(struct world * jello, struct point a[8][8][8]);
