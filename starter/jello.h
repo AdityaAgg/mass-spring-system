@@ -60,7 +60,7 @@ struct world
   struct point p[8][8][8]; // position of the 512 control points
   struct point v[8][8][8]; // velocities of the 512 control points
   
-  struct point restPositions[8][8][8];
+  
   
 };
 

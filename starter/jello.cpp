@@ -217,7 +217,7 @@ void doIdle()
 
   if (pause == 0)
   {
-    Euler(&jello);
+    RK4(&jello);
     
     // insert code which appropriately performs one step of the cube simulation:
   }

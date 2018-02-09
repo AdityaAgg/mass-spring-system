@@ -9,7 +9,10 @@
 #include "physics.h"
 #include <iostream>
 
+
 const double GLOBAL_REST_LENGTH = 1.0/7.0;
+const double GLOBAL_REST_LENGTH_SHEAR = sqrt(2.0/49);
+const double GLOBAL_REST_LENGTH_BEND = 2.0/7.0;
 double prev_length_diff = -1000;
 bool isIncreasing = false;
 /* Computes acceleration to every control point of the jello cube, 
@@ -20,19 +23,20 @@ void computeAcceleration(struct world * jello, struct point a[8][8][8])
   
   
   calculateStructuralForces(jello, a);
-  
+  calculateShearForces(jello, a);
+  calculateBendForces(jello, a);
   
   
   
 }
 //calculate hooke's law between two points
 //note force on point a is -1 * calculateHookesLaw
-struct point calculateHookesLaw(struct point a, struct point restPosition,  double elasticConstant) {
+struct point calculateHookesLaw(struct point a, struct point b, double restLength, double elasticConstant) {
   
   //difference between two points
   struct point diff;
   
-  pDIFFERENCE(a, restPosition , diff);
+  pDIFFERENCE(a, b , diff);
   
   
   //normalize for direction
@@ -43,7 +47,7 @@ struct point calculateHookesLaw(struct point a, struct point restPosition,  doub
   
   struct point finalOutput;
   
-  pMULTIPLY(diff, lengthDouble * elasticConstant, finalOutput);
+  pMULTIPLY(diff, -1 * (lengthDouble - restLength) * elasticConstant, finalOutput);
   
   return finalOutput;
 }
@@ -59,48 +63,197 @@ void calculateStructuralForces(struct world * jello, struct point a[8][8][8]) { 
     for(int j = 0; j < 8; ++j) {
       for(int k = 0; k < 8; ++k) {
         
-        if(j == 7 && i==7 && k==6)
+        if(k<7)
+        {
+
+          struct point accelOnA;
+          struct point f = calculateHookesLaw(jello->p[i][j][k], jello->p[i][j][k+1], GLOBAL_REST_LENGTH, jello->kElastic);
+          pMULTIPLY(f ,  massReciprocal, accelOnA);
+          pSUM(a[i][j][k], accelOnA, a[i][j][k]); //add acceleration on point A
+          
+          struct point accelOnB;
+          pMULTIPLY(f,  -1 * massReciprocal, accelOnB);
+          pSUM(a[i][j][k+1], accelOnB, a[i][j][k+1]); //add acceleration on point B
+          
+        }
+        if(j<7)
         {
           struct point accelOnA;
-          struct point f = calculateHookesLaw(jello->p[i][j][k], jello->restPositions[i][j][k],  jello->kElastic);
-          pMULTIPLY(f , -1 * massReciprocal, accelOnA);
-          
-          //struct point accelOnB;
-          //pMULTIPLY(f , massReciprocal, accelOnB);
-          
+          struct point f = calculateHookesLaw(jello->p[i][j][k], jello->p[i][j+1][k], GLOBAL_REST_LENGTH,  jello->kElastic);
+          pMULTIPLY(f ,  massReciprocal, accelOnA);
           pSUM(a[i][j][k], accelOnA, a[i][j][k]); //add acceleration on point A
-//          pSUM(a[i][j][k], accelOnB, a[i][j][k+1]); //add acceleration on point B
+          
+          struct point accelOnB;
+          pMULTIPLY(f,  -1 * massReciprocal, accelOnB);
+          pSUM(a[i][j+1][k], accelOnB, a[i][j+1][k]); //add acceleration on point B
         }
-//        if(j == 7 && i==7 && k==6)
-//        {
-//          struct point accelOnA;
-//          struct point f = calculateHookesLaw(jello->p[i][j][k], jello->p[i][j+1][k], GLOBAL_REST_LENGTH , jello->kElastic);
-//          pMULTIPLY(f , -1 * massReciprocal, accelOnA);
-//
-////          struct point accelOnB;
-////          pMULTIPLY(f , massReciprocal, accelOnB);
-//
-//          pSUM(a[i][j][k], accelOnA, a[i][j][k]); //add acceleration on point A
-////          pSUM(a[i][j][k], accelOnB, a[i][j+1][k]); //add acceleration on point B
-//        }
-//        if(j == 7 && i==7 && k==6)
-//        {
-//          struct point accelOnA;
-//          struct point f = calculateHookesLaw(jello->p[i][j][k], jello->p[i+1][j][k], GLOBAL_REST_LENGTH , jello->kElastic);
-//          pMULTIPLY(f , -1 * massReciprocal, accelOnA);
-//
-////          struct point accelOnB;
-////          pMULTIPLY(f , massReciprocal, accelOnB);
-//
-//          pSUM(a[i][j][k], accelOnA, a[i][j][k]); //add acceleration on point A
-////          pSUM(a[i][j][k], accelOnB, a[i+1][j][k]); //add acceleration on point B
-//        }
+        
+        if(i<7)
+        {
+          struct point accelOnA;
+          struct point f = calculateHookesLaw(jello->p[i][j][k], jello->p[i+1][j][k], GLOBAL_REST_LENGTH, jello->kElastic);
+          pMULTIPLY(f ,  massReciprocal, accelOnA);
+          pSUM(a[i][j][k], accelOnA, a[i][j][k]); //add acceleration on point A
+          
+          struct point accelOnB;
+          pMULTIPLY(f,  -1 * massReciprocal, accelOnB);
+          pSUM(a[i+1][j][k], accelOnB, a[i+1][j][k]); //add acceleration on point B
+        }
       }
     }
   }
+}
+
+void calculateBendForces(struct world * jello, struct point a[8][8][8]) {
+  double massReciprocal = 1/(jello->mass);
+
+
+
+  for(int i = 0; i < 8; ++i) {
+    for(int j = 0; j < 8; ++j) {
+      for(int k = 0; k < 8; ++k) {
+
+        //top right to bottom left diagonal
+        if(k<6)
+        {
+
+          struct point accelOnA;
+          struct point f = calculateHookesLaw(jello->p[i][j][k], jello->p[i][j][k+2], GLOBAL_REST_LENGTH_BEND, jello->kElastic);
+          pMULTIPLY(f ,  massReciprocal, accelOnA);
+          pSUM(a[i][j][k], accelOnA, a[i][j][k]); //add acceleration on point A
+
+          struct point accelOnB;
+          pMULTIPLY(f,  -1 * massReciprocal, accelOnB);
+          pSUM(a[i][j][k+2], accelOnB, a[i][j][k+2]); //add acceleration on point B
+
+        }
+        if(j<6)
+        {
+          struct point accelOnA;
+          struct point f = calculateHookesLaw(jello->p[i][j][k], jello->p[i][j+2][k], GLOBAL_REST_LENGTH_BEND,  jello->kElastic);
+          pMULTIPLY(f , massReciprocal, accelOnA);
+          pSUM(a[i][j][k], accelOnA, a[i][j][k]); //add acceleration on point A
+          
+          struct point accelOnB;
+          pMULTIPLY(f,  -1 * massReciprocal, accelOnB);
+          pSUM(a[i][j+2][k], accelOnB, a[i][j+2][k]); //add acceleration on point B
+        }
+        if(i<6)
+        {
+          struct point accelOnA;
+          struct point f = calculateHookesLaw(jello->p[i][j][k], jello->p[i+2][j][k], GLOBAL_REST_LENGTH_BEND,  jello->kElastic);
+          pMULTIPLY(f ,  massReciprocal, accelOnA);
+          pSUM(a[i][j][k], accelOnA, a[i][j][k]); //add acceleration on point A
+
+          struct point accelOnB;
+          pMULTIPLY(f,  -1 * massReciprocal, accelOnB);
+          pSUM(a[i+2][j][k], accelOnB, a[i+2][j][k]); //add acceleration on point B
+        }
+      }
+    }
+  }
+}
+
+void calculateShearForces(struct world * jello, struct point a[8][8][8]) { //array is passed by reference to function since it is a pointer
+  
+  double massReciprocal = 1/(jello->mass);
+  
+  
+  
+  for(int i = 0; i < 8; ++i) {
+    for(int j = 0; j < 8; ++j) {
+      for(int k = 0; k < 8; ++k) {
+        
+        //top right to bottom left diagonal
+        if(k<7 && j<7)
+        {
+          
+          struct point accelOnA;
+          struct point f = calculateHookesLaw(jello->p[i][j][k], jello->p[i][j+1][k+1], GLOBAL_REST_LENGTH_SHEAR, jello->kElastic);
+          pMULTIPLY(f ,  massReciprocal, accelOnA);
+          pSUM(a[i][j][k], accelOnA, a[i][j][k]); //add acceleration on point A
+          
+          struct point accelOnB;
+          pMULTIPLY(f,  -1 * massReciprocal, accelOnB);
+          pSUM(a[i][j+1][k+1], accelOnB, a[i][j+1][k+1]); //add acceleration on point B
+          
+        }
+        if(i<7 && j<7)
+        {
+          struct point accelOnA;
+          struct point f = calculateHookesLaw(jello->p[i][j][k], jello->p[i+1][j+1][k], GLOBAL_REST_LENGTH_SHEAR, jello->kElastic);
+          pMULTIPLY(f ,  massReciprocal, accelOnA);
+          pSUM(a[i][j][k], accelOnA, a[i][j][k]); //add acceleration on point A
+          
+          struct point accelOnB;
+          pMULTIPLY(f,  -1 * massReciprocal, accelOnB);
+          pSUM(a[i+1][j+1][k], accelOnB, a[i+1][j+1][k]); //add acceleration on point B
+        }
+        
+        if(i<7 && k<7)
+        {
+          struct point accelOnA;
+          struct point f = calculateHookesLaw(jello->p[i][j][k], jello->p[i+1][j][k+1], GLOBAL_REST_LENGTH_SHEAR, jello->kElastic);
+          pMULTIPLY(f , massReciprocal, accelOnA);
+          pSUM(a[i][j][k], accelOnA, a[i][j][k]); //add acceleration on point A
+          
+          struct point accelOnB;
+          pMULTIPLY(f,  -1 * massReciprocal, accelOnB);
+          pSUM(a[i+1][j][k+1], accelOnB, a[i+1][j][k+1]); //add acceleration on point B
+        }
+        
+        
+        
+        //top left to bottom right diagonal
+        if(k<7 && j>0)
+        {
+
+          struct point accelOnA;
+          struct point f = calculateHookesLaw(jello->p[i][j][k], jello->p[i][j-1][k+1], GLOBAL_REST_LENGTH_SHEAR, jello->kElastic);
+          pMULTIPLY(f ,  massReciprocal, accelOnA);
+          pSUM(a[i][j][k], accelOnA, a[i][j][k]); //add acceleration on point A
+
+          struct point accelOnB;
+          pMULTIPLY(f,  -1 * massReciprocal, accelOnB);
+          pSUM(a[i][j-1][k+1], accelOnB, a[i][j-1][k+1]); //add acceleration on point B
+
+        }
+        if(i<7 && j>0)
+        {
+
+          struct point accelOnA;
+          struct point f = calculateHookesLaw(jello->p[i][j][k], jello->p[i+1][j-1][k], GLOBAL_REST_LENGTH_SHEAR, jello->kElastic);
+          pMULTIPLY(f ,  massReciprocal, accelOnA);
+          pSUM(a[i][j][k], accelOnA, a[i][j][k]); //add acceleration on point A
+
+          struct point accelOnB;
+          pMULTIPLY(f,  -1 * massReciprocal, accelOnB);
+          pSUM(a[i+1][j-1][k], accelOnB, a[i+1][j-1][k]); //add acceleration on point B
+
+        }
+
+        if(i<7 && k>0)
+        {
+          struct point accelOnA;
+          struct point f = calculateHookesLaw(jello->p[i][j][k], jello->p[i+1][j][k-1], GLOBAL_REST_LENGTH_SHEAR, jello->kElastic);
+          pMULTIPLY(f ,  massReciprocal, accelOnA);
+          pSUM(a[i][j][k], accelOnA, a[i][j][k]); //add acceleration on point A
+
+          struct point accelOnB;
+          pMULTIPLY(f,  -1 * massReciprocal, accelOnB);
+          pSUM(a[i+1][j][k-1], accelOnB, a[i+1][j][k-1]); //add acceleration on point B
+        }
+        
+       
+        
+      }
+    }
+  }
+}
+
+
 
   
-}
 
 
 
@@ -137,30 +290,6 @@ void Euler(struct world * jello)
         jello->p[i][j][k].x += changeX;
         jello->p[i][j][k].y += changeY;
         jello->p[i][j][k].z += changeZ;
-        
-        if(changeX != 0 || changeY != 0 || changeZ !=0) {
-          if(k>0) {
-            struct point diff;
-            pDIFFERENCE(jello->p[i][j][k-1], jello->p[i][j][k], diff);
-            pNORMALIZE(diff);
-            struct point intermediate;
-            pMULTIPLY(diff, 1.0/7.0, intermediate);
-            pSUM(intermediate, jello->p[i][j][k], jello->restPositions[i][j][k-1]);
-            
-          }
-//          if(j>0) {
-//            struct point diff;
-//            pDIFFERENCE(jello->p[i][j][k-1], jello->p[i][j][k], diff);
-//            pNORMALIZE(diff);
-//            pMULTIPLY(diff, 1.0/7.0, jello->restPositions[i][j][k-1]);
-//          }
-//          if(i>0) {
-//            struct point diff;
-//            pDIFFERENCE(jello->p[i][j][k-1], jello->p[i][j][k], diff);
-//            pNORMALIZE(diff);
-//            pMULTIPLY(diff, 1.0/7.0, jello->restPositions[i][j][k-1]);
-//          }
-        }
         
         
         jello->v[i][j][k].x += jello->dt * a[i][j][k].x;

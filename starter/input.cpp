@@ -216,7 +216,6 @@ void readWorld (char * fileName, struct world * jello)
 
   /* read timestep size and render */
   fscanf(file,"%lf %d\n",&jello->dt,&jello->n);
-
   /* read physical parameters */
   fscanf(file, "%lf %lf %lf %lf\n", 
     &jello->kElastic, &jello->dElastic, &jello->kCollision, &jello->dCollision);
@@ -245,24 +244,11 @@ void readWorld (char * fileName, struct world * jello)
   
   /* read initial point positions */
   for (i= 0; i <= 7 ; i++)
-  {
     for (j = 0; j <= 7; j++)
-    {
-      for (k = 0; k <= 7; k++) {
+      for (k = 0; k <= 7; k++)
         fscanf(file, "%lf %lf %lf\n", 
           &jello->p[i][j][k].x, &jello->p[i][j][k].y, &jello->p[i][j][k].z);
-        
-        
-        //Aditya Addition: calculate rest positions
-        struct point diff;
-        pDIFFERENCE(jello->p[i][j][k-1], jello->p[i][j][k], diff);
-        pNORMALIZE(diff);
-        struct point intermediate;
-        pMULTIPLY(diff, 1.0/7.0, intermediate);
-        pSUM(intermediate, jello->p[i][j][k], jello->restPositions[i][j][k-1]);
-      }
-    }
-  }
+      
   
   
   
@@ -277,6 +263,8 @@ void readWorld (char * fileName, struct world * jello)
           &jello->v[i][j][k].x, &jello->v[i][j][k].y, &jello->v[i][j][k].z);
     }
   }
+  
+  
 
   fclose(file);
   
