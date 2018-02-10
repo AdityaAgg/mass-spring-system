@@ -18,5 +18,6 @@ struct point calculateHookesLaw(struct point a, struct point b, struct point vA,
 void calculateStructuralForces(struct world * jello, struct point  a[8][8][8]);
 void calculateShearForces(struct world * jello, struct point a[8][8][8]);
 void calculateBendForces(struct world * jello, struct point a[8][8][8]);
+void calculateCollisionForces(struct world * jello, struct point a[8][8][8]);
 #endif
 
