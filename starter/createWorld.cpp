@@ -40,6 +40,7 @@ struct world
   struct point * forceField; // pointer to the array of values of the force field
   struct point p[8][8][8]; // position of the 512 control points
   struct point v[8][8][8]; // velocities of the 512 control points
+  
 };
 
 
@@ -197,6 +198,7 @@ int main()
 		    jello.v[i][j][k].z=20.0;
       }
 
+  
   // write the jello variable out to file on disk
   // change jello.w to whatever you need
   writeWorld("jello.w",&jello);

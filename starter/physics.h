@@ -19,5 +19,8 @@ void calculateStructuralForces(struct world * jello, struct point  a[8][8][8]);
 void calculateShearForces(struct world * jello, struct point a[8][8][8]);
 void calculateBendForces(struct world * jello, struct point a[8][8][8]);
 void calculateCollisionForces(struct world * jello, struct point a[8][8][8]);
+void computeAcceleration(struct world * jello, struct point a[8][8][8]);
+void addForceFieldForces(struct world * jello, struct point a[8][8][8]);
+void calculateForceforPoint(struct point & vec, struct world * jello, int l, int m, int n);
 #endif
 

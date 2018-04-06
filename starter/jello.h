@@ -19,7 +19,7 @@
 #include "openGL-headers.h"
 #include "pic.h"
 
-#define pi 3.141592653589793238462643383279
+#define piJello 3.141592653589793238462643383279
 
 // camera angles
 extern double Theta;
@@ -40,8 +40,13 @@ struct point
   double z;
 };
 
+
+extern struct point applyForceDeltaMouse;
+
 // these variables control what is displayed on the screen
 extern int shear, bend, structural, pause, viewingMode, saveScreenToFile;
+
+
 
 struct world
 {
@@ -60,6 +65,7 @@ struct world
   struct point p[8][8][8]; // position of the 512 control points
   struct point v[8][8][8]; // velocities of the 512 control points
   
+  double fallOffEpsilon;  
   
   
 };

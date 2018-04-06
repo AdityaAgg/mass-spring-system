@@ -12,10 +12,12 @@
 #include "showCube.h"
 #include "input.h"
 #include "physics.h"
+#include <string>
+
 
 // camera parameters
-double Theta = pi / 6;
-double Phi = pi / 6;
+double Theta = piJello / 6;
+double Phi = piJello / 6;
 double R = 6;
 
 // mouse control
@@ -28,6 +30,8 @@ int sprite=0;
 
 // these variables control what is displayed on screen
 int shear=0, bend=0, structural=1, pause=0, viewingMode=0, saveScreenToFile=0;
+
+struct point applyForceDeltaMouse;
 
 struct world jello;
 
@@ -48,7 +52,15 @@ void myinit()
   glShadeModel(GL_SMOOTH);
   glEnable(GL_POLYGON_SMOOTH);
   glEnable(GL_LINE_SMOOTH);
-
+  
+  double maxLength = sqrt(3 * pow((4.0/jello.resolution), 2));
+  
+  
+  jello.fallOffEpsilon = log(10E-2)/(-1 * maxLength); //makes fall off such that it goes to 0.01 for largest possible distance between points (in fact slightly larger than largest possible distance)
+  
+  
+  
+  
   return; 
 }
 
@@ -67,7 +79,9 @@ void reshape(int w, int h)
   // Set the perspective
   double aspectRatio = 1.0 * w / h;
   gluPerspective(60.0f, aspectRatio, 0.01f, 1000.0f);
-
+  
+  
+  
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity(); 
 
@@ -83,7 +97,7 @@ void display()
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-
+  
   // camera parameters are Phi, Theta, R
   gluLookAt(R * cos(Phi) * cos (Theta), R * sin(Phi) * cos (Theta), R * sin (Theta),
 	        0.0,0.0,0.0, 0.0,0.0,1.0);
@@ -217,7 +231,14 @@ void doIdle()
 
   if (pause == 0)
   {
-    RK4(&jello);
+    
+    if(std::string(jello.integrator).compare("RK4") == 0) {
+      
+      RK4(&jello);
+      
+    } else {
+      Euler(&jello);
+    }
     
     // insert code which appropriately performs one step of the cube simulation:
   }

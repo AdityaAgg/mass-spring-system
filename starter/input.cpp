@@ -8,6 +8,10 @@
 #include "jello.h"
 #include "input.h"
 #include <iostream>
+#include "glm/mat4x4.hpp"
+#include "glm/vec4.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
 
 /* Write a screenshot, in the PPM format, to the specified filename, in PPM format */
 void saveScreenshot(int windowWidth, int windowHeight, char *filename)
@@ -44,22 +48,38 @@ void mouseMotionDrag(int x, int y)
     Phi += vMouseDelta[0] * 0.01;
     Theta += vMouseDelta[1] * 0.01;
     
-    if (Phi>2*pi)
-      Phi -= 2*pi;
+    if (Phi>2*piJello)
+      Phi -= 2*piJello;
     
     if (Phi<0)
-      Phi += 2*pi;
+      Phi += 2*piJello;
     
-    if (Theta>pi / 2 - 0.01) // dont let the point enter the north pole
-      Theta = pi / 2 - 0.01;
+    if (Theta>piJello / 2 - 0.01) // dont let the point enter the north pole
+      Theta = piJello / 2 - 0.01;
     
-    if (Theta<- pi / 2 + 0.01)
-      Theta = -pi / 2 + 0.01;
+    if (Theta<- piJello / 2 + 0.01)
+      Theta = -piJello / 2 + 0.01;
     
 
     g_vMousePos[0] = x;
     g_vMousePos[1] = y;
+  } else if (g_iLeftMouseButton) {
+
+    float mvmatrix[16];
+    
+    
+    glGetFloatv(GL_MODELVIEW_MATRIX, mvmatrix);
+    glGetFloatv(GL_MODELVIEW_MATRIX, mvmatrix);
+    
+    glm::vec4 result = glm::transpose(glm::make_mat4(mvmatrix)) * glm::vec4(x-g_vMousePos[0] * 1.0, (y* -1.0)- (-1.0 *g_vMousePos[1]), 0, 1);
+    
+    
+    result = glm::normalize(result) * 10000.0f;
+    applyForceDeltaMouse.x = result.x;
+    applyForceDeltaMouse.y = result.y;
+    applyForceDeltaMouse.z = result.z;
   }
+  
 }
 
 void mouseMotion (int x, int y)
@@ -70,7 +90,16 @@ void mouseMotion (int x, int y)
 
 void mouseButton(int button, int state, int x, int y)
 {
-  std::cout << button << " mouse button hit" << std::endl;
+  
+  if(button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
+    
+    
+    
+    
+    
+    
+  }
+  
   switch (button)
   {
     case GLUT_LEFT_BUTTON:
@@ -83,7 +112,8 @@ void mouseButton(int button, int state, int x, int y)
       g_iRightMouseButton = (state==GLUT_DOWN);
       break;
   }
- 
+  
+  
   g_vMousePos[0] = x;
   g_vMousePos[1] = y;
 }
@@ -98,8 +128,8 @@ void keyboardFunc (unsigned char key, int x, int y)
       break;
 
     case 'e':
-      Theta = pi / 6;
-      Phi = pi / 6;
+      Theta = piJello / 6;
+      Phi = piJello / 6;
       viewingMode = 0;
       break;
 
