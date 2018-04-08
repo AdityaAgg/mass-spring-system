@@ -74,7 +74,7 @@ void mouseMotionDrag(int x, int y)
     glm::vec4 result = glm::transpose(glm::make_mat4(mvmatrix)) * glm::vec4(x-g_vMousePos[0] * 1.0, (y* -1.0)- (-1.0 *g_vMousePos[1]), 0, 1);
     
     
-    result = glm::normalize(result) * 10000.0f;
+    result = glm::normalize(result) * 20000.0f;
     applyForceDeltaMouse.x = result.x;
     applyForceDeltaMouse.y = result.y;
     applyForceDeltaMouse.z = result.z;

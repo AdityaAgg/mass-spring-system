@@ -46,8 +46,8 @@ void myinit()
   // set background color to grey
   glClearColor(0.5, 0.5, 0.5, 0.0);
 
-  glCullFace(GL_BACK);
-  glEnable(GL_CULL_FACE);
+  //glCullFace(GL_BACK); - turn off face culling for plane
+  //glEnable(GL_CULL_FACE);
 
   glShadeModel(GL_SMOOTH);
   glEnable(GL_POLYGON_SMOOTH);
@@ -59,7 +59,11 @@ void myinit()
   jello.fallOffEpsilon = log(10E-2)/(-1 * maxLength); //makes fall off such that it goes to 0.01 for largest possible distance between points (in fact slightly larger than largest possible distance)
   
   
-  
+  //setup values for inclined plane
+  jello.a = 1;
+  jello.b = 0.0;
+  jello.c = 3.0;
+  jello.d = 6.0;
   
   return; 
 }
@@ -202,8 +206,123 @@ void display()
 
   // show the bounding box
   showBoundingBox();
+  
+  showPlane();
  
   glutSwapBuffers();
+}
+
+void showPlane()
+{
+  
+  
+  glColor4f(0,0.6,0.6,0);
+  glBegin(GL_TRIANGLE_STRIP);
+  double a = jello.a;
+  double b = jello.b;
+  double c = jello.c;
+  double d = jello.d;
+  
+
+  
+  //z
+  //calculateIntersect(a, b, d, c, -2, 2);
+  //calculateIntersect(a, b, d, c, 2, 2);
+  
+  //y
+  calculateIntersect(a, c, d, b, -2, 1);
+  calculateIntersect(a, c, d, b, 2, 1);
+  
+  //x
+  
+  //calculateIntersect(b, c, d, a, 2, 0);
+  //calculateIntersect(b, c, d, a, -2, 0);
+  
+  
+   glEnd();
+//  glColor4f(0.6,0,0,0);
+//  glBegin(GL_LINES);
+//  glVertex3f(0, 0, -2.0);
+//  glVertex3f(1, 0, 1.0);
+//  glEnd();
+  
+  return;
+  
+  
+  
+  
+}
+
+
+void calculateIntersect(double dim1,double dim2, double d, double dim3, double planeValue, int whichPlane) {
+  double xmaxIntersect = (-1.0 * ((dim1 * 2) + dim3 * planeValue  + d))/dim2;
+  double xminIntersect = (-1.0 * ((dim1 * -2) + dim3 * planeValue + d))/dim2;
+  double x1;
+  double y1;
+  
+  double x2;
+  double y2;
+  bool set1 = false;
+  bool set2 = false;
+  if(xminIntersect<=2 && xminIntersect>= -2)
+  {
+    x1 = -2;
+    y1 = xminIntersect;
+    set1= true;
+    if (xmaxIntersect <= 2 && xmaxIntersect >= -2) {
+      x2 = 2;
+      y2 = xmaxIntersect;
+      set2 = true;
+    }
+  } else if (xmaxIntersect <= 2 && xmaxIntersect >= -2) {
+    x1 = 2;
+    y1 = xmaxIntersect;
+    set1 = true;
+  }
+  
+  
+  
+  
+  int yminIntersect = (-1.0 * ((dim2 * -2) + dim3 * planeValue + d))/dim1;
+  int ymaxIntersect = (-1.0 * ((dim2 * 2) + dim3 * planeValue + d))/dim1;
+ 
+  if(!set2) {
+    if(yminIntersect<= 2 && yminIntersect>= -2)
+    {
+      
+      if(set1) {
+        y2 = -2;
+        x2 = yminIntersect;
+      } else {
+        y1 = -2;
+        x1 = yminIntersect;
+        y2 = 2;
+        x2 = ymaxIntersect;
+      }
+      
+      
+      
+    } else {
+      y2 = 2;
+      x2 = ymaxIntersect;
+    }
+  }
+  
+  if(whichPlane == 0) {
+    glVertex3f(planeValue,x1,y1);
+  } else if (whichPlane == 1) {
+    glVertex3f(x1,planeValue,y1);
+  } else {
+    glVertex3f(x1,y1, planeValue);
+  }
+  
+  if(whichPlane == 0) {
+    glVertex3f(planeValue,x2,y2);
+  } else if (whichPlane == 1) {
+    glVertex3f(x2,planeValue,y2);
+  } else {
+    glVertex3f(x2,y2, planeValue);
+  }
 }
 
 void doIdle()
